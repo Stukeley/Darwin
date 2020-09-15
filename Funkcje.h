@@ -1,118 +1,140 @@
+/**
+ * @file
+ */
 #pragma once
-#include "Struktury.h"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <random>
-#include <ctime>
 #include <chrono>
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <random>
+#include <sstream>
+#include <string>
+
+#include "Struktury.h"
 using namespace std;
 
-//todo: usunac polskie znaki
-
 /**
- * Funkcja wczytuje osobniki z pliku wejœciowego i zapisuj¹ca ich do listy jednokierunkowej osobników podwieszonej list¹ DNA (chromosomem).
- * @param Wejscie Nazwa pliku wejœciowego podana jako prze³¹cznik.
- * @return Lista osobników wczytanych z pliku.
- * @note Parametr jest przekazywany przez referencjê, gdy¿ i tak nie jest modyfikowany przez funkcjê.
+ * Funkcja wczytuje osobniki z pliku wejsciowego o nazwie podanej jako przelacznik i zapisuje ich do listy jednokierunkowej osobnikow podwieszonej lista chromosomow.
+ * @param Wejscie Nazwa pliku wejsciowego podana jako przelacznik.
+ * @return Lista osobnikow wczytanych z pliku.
+ * @note Parametr jest przekazywany przez referencje, gdyz i tak nie jest modyfikowany przez funkcje.
  */
 Osobnik* WczytajOsobnikowZPliku(string& Wejscie);
 
 /**
- * Funkcja zapisuje obecny stan populacji do pliku wejœciowego o nazwie podanej jako prze³¹cznik.
- * @param pHead WskaŸnik na pierwszy element listy osobników.
- * @param Wyjscie Nazwa pliku wyjœciowego podana jako prze³¹cznik.
- * @note Parametr jest przekazywany przez referencjê, gdy¿ i tak nie jest modyfikowany przez funkcjê.
+ * Funkcja zapisuje obecny stan populacji do pliku wejsciowego o nazwie podanej jako przelacznik.
+ * @param pHead Wskaznik na pierwszy element listy osobnikow.
+ * @param Wyjscie Nazwa pliku wyjsciowego podana jako przelacznik.
+ * @note Parametr jest przekazywany przez referencje, gdyz i tak nie jest modyfikowany przez funkcje.
  */
 void ZapiszOsobnikowDoPliku(Osobnik* pHead, string& Wyjscie);
 
 /**
- * Funkcja zwraca iloœæ elementów w liœcie jednokierunkowej chromosomów.
- * @param pHead WskaŸnik na pierwszy element listy chromosomów.
- * @return Iloœæ elementów w liœcie.
+ * Tworzy nowego osobnika na podstawie chromosomu oraz funkcji dopasowania, podanych jako parametry, i dodaje go do listy osobnikow.
+ * @param pHead Wskaznik na pierwszy element listy, do ktorej nalezy dodac nowego osobnika.
+ * @param chromosom Wskaznik na pierwszy element listy reprezentujacej chromosom osobnika.
+ * @param dopasowanie Wartosc funkcji dopasowania osobnika.
  */
-int RozmiarListyChromosomow(Chromosom* pHead);
+void DodajDoListyOsobnikow(Osobnik*& pHead, Chromosom* chromosom, double dopasowanie);
 
 /**
- * Funkcja zwraca iloœæ elementów w liœcie jednokierunkowej osobników.
- * @param pHead WskaŸnik na pierwszy element listy osobników.
- * @return Iloœæ elementów w liœcie.
+ * Dodaje wartosc przekazana jako parametr do danej listy chromosomow osobnika.
+ * @param pHead Wskaznik na pierwszy element listy chromosomow, do ktorej nalezy dodac nowa wartosc.
+ * @param liczba Liczba reprezentujaca chromosom.
  */
-int RozmiarListyOsobnikow(Osobnik* pHead);
+void DodajDoListyChromosomow(Chromosom*& pHead, int liczba);
 
 /**
- * Funkcja zwraca iloœæ osobników w liœcie zdolnych do rozmna¿ania (z wartoœci¹ funkcji dopasowania powy¿ej wspó³czynnika podanego jako prze³¹cznik).
- * @param pHead WskaŸnik na pierwszy element listy osobników.
- * @param WspolczynnikRozmnazania Wspó³czynnik rozmna¿ania, podany jako prze³¹cznik.
- * @return Iloœæ zdolnych do rozmna¿ania osobników.
- */
-int IloscZdolnychOsobnikow(Osobnik* pHead, double WspolczynnikRozmnazania);
-
-/**
- * Dodaje osobnika przekazanego jako parametr do danej listy osobników.
- * @param pHead WskaŸnik na pierwszy element listy, do której nale¿y dodaæ nowego osobnika.
- * @param pChromosom WskaŸnik na pierwszy element listy chromosomów dodawanego osobnika.
- * @param dopasowanie Wartoœæ funkcji dopasowania doawanego osobnika.
- */
-void DodajDoListyOsobnikow(Osobnik*& pHead, Chromosom* pChromosom, double dopasowanie);
-
-/**
- * Dodaje wartoœæ przekazan¹ jako parametr do danej listy chromosomów osobnika.
- * @param pHead WskaŸnik na pierwszy element listy chromosomów, do której nale¿y dodaæ now¹ wartoœæ.
- * @param wartosc Liczba naturalna któr¹ dodajemy do listy.
- */
-void DodajDoListyChromosomow(Chromosom*& pHead, int wartosc);
-
-/**
- * Funkcja losuje dla osobnika wartoœæ dopasowania z przedzia³u [0;1].
- * @return Wylosowana wartoœæ funkcji dopasowania.
+ * Funkcja losuje dla osobnika wartosc dopasowania z przedzialu [0;1].
+ * @return Wylosowana wartosc funkcji dopasowania.
  */
 double WylosujFunkcjeDopasowania();
 
 /**
- * Usuwa listê jednokierunkow¹ chromosomu.
- * @param pHead WskaŸnik na pierwszy element listy chromosomów, któr¹ usuwamy.
+ * Funkcja losuje kazdemu osobnikowi z wartoscia funkcji dopasowania rowna -1 nowa wartosc z przedzialu [0;1].
+ * @param pHead Wskaznik na pierwszy element listy, dla ktorej losujemy nowe wartosci.
+ * @note Wartosc (-1) oznacza "nie ustawiono", zostanie wylosowana dopiero po skrzyzowaniu pokolenia, by nowopowstale osobniki nie krzyzowaly sie od razu z innymi.
+ */
+void UstawFunkcjeDopasowania(Osobnik* pHead);
+
+/**
+ * Usuwa liste jednokierunkowa chromosomow.
+ * @param pHead Wskaznik na pierwszy element listy chromosomow, ktora usuwamy.
  */
 void UsunListeChromosomow(Chromosom*& pHead);
 
 /**
- * Usuwa listê jednokierunkow¹ osobników. Domyœlnie funkcja ta wywo³ywana jest na koniec programu.
- * @param pHead WskaŸnik na pierwszy element listy osobników, któr¹ usuwamy.
+ * Usuwa liste jednokierunkowa osobnikow, wraz z lista chromosomow dla kazdego osobnika.
+ * @param pHead Wskaznik na pierwszy element listy osobnikow, ktora usuwamy.
+ * @note Funkcja jest wykonywana przed zakonczeniem dzialania programu.
  */
 void UsunListeOsobnikow(Osobnik*& pHead);
 
 /**
- * Losowo wybiera dwóch osobników do krzy¿owania siê z listy wszystkich osobników, i zwraca listê jednokierunkow¹ zawieraj¹c¹ obu z nich.
- * @param pHead WskaŸnik na pierwszy element listy wszystkich osobników.
- * @param WspolczynnikRozmnazania Wspó³czynnik rozmna¿ania podany jako prze³¹cznik.
- * @return Dwuelementowa lista jednokierunkowa zawieraj¹ca osobniki do krzy¿owania siê.
- */
-Osobnik* WylosujPareOsobnikow(Osobnik* pHead, double WspolczynnikRozmnazania);
-
-/**
- * Usuwa z populacji osobniki, które maj¹ wartoœæ funkcji dopasowania poni¿ej progu podanego jako prze³¹cznik.
- * @param pHead WskaŸnik na pierwszy element listy osobników.
- * @param WspolczynnikWymierania Wspó³czynnik wymierania podany jako prze³¹cznik.
+ * Usuwa z populacji osobniki, ktore maja wartosc funkcji dopasowania ponizej progu podanego jako przelacznik.
+ * @param pHead Wskaznik na pierwszy element listy osobnikow.
+ * @param WspolczynnikWymierania Wspolczynnik wymierania podany jako przelacznik.
  */
 void UsunOsobnikowZPopulacji(Osobnik*& pHead, double WspolczynnikWymierania);
 
 /**
- * Rozmna¿a osobniki i zwraca potomka powsta³ego wskutek pêkniêcia chromosomów krzy¿uj¹cych siê osobników.
- * @param pHead WskaŸnik na pierwszy element listy osobników, do której dodany zostanie nowy osobnik.
- * @param pierwszy Pierwszy z osobników do rozmno¿enia.
- * @param drugi Drugi z osobników do rozmno¿enia.
- * @param WspolczynnikRozmnazania Wspó³czynnik rozmna¿ania podany jako prze³¹cznik.
- * @return Osobnik powsta³y wskutek rozmna¿ania.
- * @note Funkcja zwróci nullptr je¿eli którykolwiek z osobników jest niezdolny do rozmna¿ania (ma wartoœæ funkcji dopasowania poni¿ej progu).
+ * Funkcja zwraca ilosc elementow w liscie jednokierunkowej chromosomow.
+ * @param pHead Wskaznik na pierwszy element listy chromosomow.
+ * @return Ilosc elementow w liscie.
  */
-Osobnik* Rozmnoz(Osobnik*& pHead, Osobnik* pierwszy, Osobnik* drugi, double WspolczynnikRozmnazania);
+int RozmiarListyChromosomow(Chromosom* pHead);
 
 /**
- * Symuluje nastêpne pokolenie osobników.
- * @param pHead WskaŸnik na pierwszy element listy osobników.
- * @param LiczbaParOsobnikow Liczba par osobników do rozmno¿enia w ka¿dym pokoleniu, podana jako prze³¹cznik.
- * @param WspolczynnikWymierania Wspó³czynnik wymierania podany jako prze³¹cznik.
- * @param WspolczynnikRozmnazania Wspó³czynnik rozmna¿ania podany jako prze³¹cznik.
- * @note Po wykonaniu funkcji lista wskazywana przez pHead bêdzie zawiera³a nowo-stworzonych osobników.
+ * Funkcja zwraca ilosc elementow w liscie jednokierunkowej osobnikow.
+ * @param pHead Wskaznik na pierwszy element listy osobnikow.
+ * @return Ilosc elementow w liscie.
  */
-void NastepnePokolenie(Osobnik*& pHead, int LiczbaParOsobnikow, double WspolczynnikWymierania, double WspolczynnikRozmnazania);
+int RozmiarListyOsobnikow(Osobnik* pHead);
+
+/**
+ * Funkcja kopiuje liste chromosomow podana jako parametr, a nastepnie zwraca ja.
+ * @param stary Chromosom, ktory kopiujemy.
+ * @return Nowa lista zawierajaca takie same chromosomy jak ta podana jako parametr.
+ * @note Funkcja ta ulatwia zwalnianie pamieci po wykonaniu programu.
+ */
+Chromosom* DuplikujChromosom(Chromosom* stary);
+
+/**
+ * Funkcja doprowadza do pekniecie dwoch chromosomow w wyznaczonych miejscach, a nastepnie laczy je.
+ * @param pierwszy Wskaznik na pierwszy element pierwszej listy chromosomow.
+ * @param k1 Miejsce pekniecia pierwszego chromosomu.
+ * @param drugi Wskaznik na pierwszy element drugiej listy chromosomow.
+ * @param k2 Miejsce peknecia drugiego chromosomu.
+ * @return Zl¹czony chromosom.
+ * @note Dla pierwszej listy zliczamy chromosomy od poczaku do miejsca pekniecia, a dla drugiej - od miejsca pekniecia do konca. Zakladamy rowniez, ze kazdy osobnik "daje" co najmniej jeden chromosom.
+ */
+Chromosom* PolaczChromosom(Chromosom* pierwszy, int k1, Chromosom* drugi, int k2);
+
+/**
+ * Funkcja losowo wybiera dwoch osobnikow do krzyzowania sie z listy wszystkich osobnikow.
+ * @param pHead Wskaznik na pierwszy element listy wszystkich osobnikow.
+ * @param WspolczynnikRozmnazania Wspolczynnik rozmnazania podany jako przelacznik.
+ * @param pierwszy Pierwszy osobnik ze zwracanej pary.
+ * @param drugi Drugi osobnik ze zwracanej pary.
+ * @note Jezeli ktorys z wylosowanych osobnikow bedzie nullptr, oznacza to, ze w populacji jest zbyt malo osobnikow zdolnych do rozmnazania sie.
+ */
+void WylosujPareOsobnikow(Osobnik* pHead, double WspolczynnikRozmnazania, Osobnik*& pierwszy, Osobnik*& drugi);
+
+/**
+ * Rozmnaza osobniki i zwraca potomka powstalego wskutek pekniecia chromosomow krzyzujacych sie osobnikow.
+ * @param pierwszy Pierwszy z osobnikow do rozmnozenia.
+ * @param drugi Drugi z osobnikow do rozmnozenia.
+ * @param WspolczynnikRozmnazania Wspolczynnik rozmnazania podany jako przelacznik.
+ * @return Osobnik powstaly wskutek rozmnazania.
+ * @note Funkcja zwroci nullptr jezeli ktorykolwiek z osobnikow jest niezdolny do rozmnazania (ma wartosc funkcji dopasowania ponizej progu).
+ */
+Osobnik* Rozmnoz(Osobnik* pierwszy, Osobnik* drugi, double WspolczynnikRozmnazania);
+
+/**
+ * Symuluje nastepne pokolenie osobnikow.
+ * @param pHead Wskaznik na pierwszy element listy osobnikow.
+ * @param LiczbaParOsobnikow Liczba par osobnikow do rozmnozenia w kazdym pokoleniu, podana jako przelacznik.
+ * @param WspolczynnikRozmnazania Wspolczynnik rozmnazania podany jako przelacznik.
+ * @note Po wykonaniu funkcji, lista wskazywana przez pHead bedzie zawierala nowostworzonych osobnikow.
+ */
+void NastepnePokolenie(Osobnik*& pHead, int LiczbaParOsobnikow, double WspolczynnikRozmnazania);

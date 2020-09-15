@@ -2,24 +2,24 @@
 
 int main(int argc, char* argv[])
 {
-	//wczytywanie przelacznikow (zakladamy, ze kazdy z nich jest podany przy kazdym uruchomieniu programu)
+	//wczytywanie przelacznikow (program wymaga podania wszystkich z nich, w dowolnej kolejnosci)
 
-	//Nazwa pliku wejœciowego podana jako prze³¹cznik.
+	//Nazwa pliku wejsciowego
 	string Wejscie;
 
-	//Nazwa pliku wyjœciowego podana jako prze³¹cznik.
+	//Nazwa pliku wyjsciowego
 	string Wyjscie;
 
-	//Próg wymierania osobników podany jako prze³¹cznik.
+	//Prog wymierania osobnikow
 	double WspolczynnikWymierania;
 
-	//Próg rozmna¿ania osobników podany jako prze³¹cznik.
+	//Prog rozmnazania osobnikow
 	double WspolczynnikRozmnazania;
 
-	//Iloœæ pokoleñ do zasymulowania, podana jako prze³¹cznik.
+	//Ilosc pokolen do zasymulowania
 	int LiczbaPokolen;
 
-	//Iloœæ krzy¿uj¹cych siê par osobników podana jako prze³¹cznik.
+	//Ilosc krzyzujacych sie par osobnikow
 	int LiczbaParOsobnikow;
 
 	//wczytaj przelaczniki
@@ -52,20 +52,13 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	//Debug
-	Wejscie = "Wejscie.txt";
-	Wyjscie = "Wyjscie.txt";
-	WspolczynnikWymierania = 0.2;
-	WspolczynnikRozmnazania = 0.5;
-	LiczbaPokolen = 3;
-	LiczbaParOsobnikow = 2;
-	//
-
 	Osobnik* pGlowa = WczytajOsobnikowZPliku(Wejscie);
 
 	for (int i = 0; i < LiczbaPokolen; i++)
 	{
-		NastepnePokolenie(pGlowa, LiczbaParOsobnikow, WspolczynnikWymierania, WspolczynnikRozmnazania);
+		NastepnePokolenie(pGlowa, LiczbaParOsobnikow, WspolczynnikRozmnazania);
+		UstawFunkcjeDopasowania(pGlowa);
+		UsunOsobnikowZPopulacji(pGlowa, WspolczynnikWymierania);
 	}
 
 	ZapiszOsobnikowDoPliku(pGlowa, Wyjscie);

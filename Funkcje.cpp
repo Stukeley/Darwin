@@ -1,53 +1,10 @@
 #include "Funkcje.h"
-#include "memory/nvwa/debug_new.h"
 
-int RozmiarListyOsobnikow(Osobnik* pHead)
-{
-	int ilosc = 0;
-
-	while (pHead)
-	{
-		ilosc++;
-		pHead = pHead->pNext;
-	}
-
-	return ilosc;
-}
-
-int RozmiarListyChromosomow(Chromosom* pHead)
-{
-	int ilosc = 0;
-
-	while (pHead)
-	{
-		ilosc++;
-		pHead = pHead->pNext;
-	}
-
-	return ilosc;
-}
-
-int IloscZdolnychOsobnikow(Osobnik* pHead, double WspolczynnikRozmnazania)
-{
-	int ilosc = 0;
-
-	while (pHead)
-	{
-		if (pHead->dopasowanie > WspolczynnikRozmnazania)
-		{
-			ilosc++;
-		}
-		pHead = pHead->pNext;
-	}
-
-	return ilosc;
-}
-
-void DodajDoListyOsobnikow(Osobnik*& pHead, Chromosom* pChromosom, double dopasowanie)
+void DodajDoListyOsobnikow(Osobnik*& pHead, Chromosom* chromosom, double dopasowanie)
 {
 	if (!pHead)
 	{
-		pHead = new Osobnik{ dopasowanie, pChromosom, nullptr };
+		pHead = new Osobnik{ dopasowanie, chromosom, nullptr };
 	}
 	else
 	{
@@ -56,15 +13,15 @@ void DodajDoListyOsobnikow(Osobnik*& pHead, Chromosom* pChromosom, double dopaso
 		{
 			temp = temp->pNext;
 		}
-		temp->pNext = new Osobnik{ dopasowanie, pChromosom, nullptr };
+		temp->pNext = new Osobnik{ dopasowanie, chromosom, nullptr };
 	}
 }
 
-void DodajDoListyChromosomow(Chromosom*& pHead, int wartosc)
+void DodajDoListyChromosomow(Chromosom*& pHead, int liczba)
 {
 	if (!pHead)
 	{
-		pHead = new Chromosom{ wartosc, nullptr };
+		pHead = new Chromosom{ liczba, nullptr };
 	}
 	else
 	{
@@ -73,7 +30,7 @@ void DodajDoListyChromosomow(Chromosom*& pHead, int wartosc)
 		{
 			temp = temp->pNext;
 		}
-		temp->pNext = new Chromosom{ wartosc, nullptr };
+		temp->pNext = new Chromosom{ liczba, nullptr };
 	}
 }
 
@@ -84,6 +41,18 @@ double WylosujFunkcjeDopasowania()
 	uniform_real_distribution<double> rozklad(0.0, 1.0);
 
 	return rozklad(rng);
+}
+
+void UstawFunkcjeDopasowania(Osobnik* pHead)
+{
+	while (pHead)
+	{
+		if (pHead->dopasowanie == -1)
+		{
+			pHead->dopasowanie = WylosujFunkcjeDopasowania();
+		}
+		pHead = pHead->pNext;
+	}
 }
 
 void UsunListeChromosomow(Chromosom*& pHead)
@@ -105,82 +74,6 @@ void UsunListeOsobnikow(Osobnik*& pHead)
 		delete pHead;
 		pHead = p;
 	}
-}
-
-Osobnik* WylosujPareOsobnikow(Osobnik* pHead, double WspolczynnikRozmnazania)
-{
-	//bez tworzenia drugiej listy
-
-	//n, czyli ilosc elementow z ktorych wybieramy - interesuja nas tylko osobniki ktore moga sie rozmnazac, czyli z odpowiednio wysoka wartoscia dopasowania
-	int n = IloscZdolnychOsobnikow(pHead, WspolczynnikRozmnazania);
-
-	if (n < 2)
-	{
-		//zbyt malo osobnikow zdolnych do rozmnozenia
-		return nullptr;
-	}
-
-	default_random_engine rng;
-	rng.seed(chrono::system_clock::now().time_since_epoch().count());
-	//okresla ilosc "przejsc" po liscie do znalezienia danego osobnika (tylko dla zdolnych do rozmnazania sie) - od 0 do (n-1)
-	uniform_int_distribution<int> rozklad(0, n - 1);
-
-	//losujemy dwa "indeksy" osobnikow ktorych wykorzystamy do krzyzowania
-	int a = rozklad(rng);
-	int b;
-
-	//upewniamy sie ze wylosowalismy 2 roznych osobnikow
-	while (true)
-	{
-		b = rozklad(rng);
-		if (b != a)
-		{
-			break;
-		}
-	}
-
-	Osobnik* para = nullptr;
-
-	Osobnik* temp = pHead;
-	int i = 0;
-
-	//wybieramy odpowiednich osobnikow do krzyzowania z listy
-	//! problem - czasami wybieramy osobnikow ze zbyt mala funkcja
-
-	while (true)
-	{
-		if (temp->dopasowanie > WspolczynnikRozmnazania)
-		{
-			if (i >= a)
-			{
-				break;
-			}
-			i++;
-		}
-		temp = temp->pNext;
-	}
-	para = temp;
-
-	temp = pHead;
-	i = 0;
-
-	while (true)
-	{
-		if (temp->dopasowanie > WspolczynnikRozmnazania)
-		{
-			if (i >= b)
-			{
-				break;
-			}
-			i++;
-		}
-		temp = temp->pNext;
-	}
-
-	//upewniamy sie ze drugi element zwracanej listy nie wskazuje na nic (lista ma byc dwuelementowa)
-	para->pNext->pNext = nullptr;
-
-	return para;
 }
 
 void UsunOsobnikowZPopulacji(Osobnik*& pHead, double WspolczynnikWymierania)
@@ -213,127 +106,240 @@ void UsunOsobnikowZPopulacji(Osobnik*& pHead, double WspolczynnikWymierania)
 	}
 }
 
-Osobnik* Rozmnoz(Osobnik*& pHead, Osobnik* pierwszy, Osobnik* drugi, double WspolczynnikRozmnazania)
+int RozmiarListyChromosomow(Chromosom* pHead)
 {
-	//Funkcja rozmnozy osobnikow tylko, jezeli ich funkcja dopasowania jest powyzej progu, inaczej zwroci nullptr
+	int ilosc = 0;
+
+	while (pHead)
+	{
+		ilosc++;
+		pHead = pHead->pNext;
+	}
+
+	return ilosc;
+}
+
+int RozmiarListyOsobnikow(Osobnik* pHead)
+{
+	int ilosc = 0;
+
+	while (pHead)
+	{
+		ilosc++;
+		pHead = pHead->pNext;
+	}
+
+	return ilosc;
+}
+
+Chromosom* DuplikujChromosom(Chromosom* stary)
+{
+	Chromosom* nowy = nullptr;
+
+	while (stary)
+	{
+		DodajDoListyChromosomow(nowy, stary->liczba);
+
+		stary = stary->pNext;
+	}
+
+	return nowy;
+}
+
+Chromosom* PolaczChromosom(Chromosom* pierwszy, int k1, Chromosom* drugi, int k2)
+{
+	//opis dzialania:
+	//Pierwszy: 1 2 3 * 4 5
+	//Drugi:	6 7 * 8 9
+	//Razem:	1 2 3 8 9
+
+	Chromosom* nowy = nullptr;
+
+	//dla pierwszej listy zapisujemy pierwsze k1 chromosomów
+	for (int i = 0; i < k1; i++)
+	{
+		DodajDoListyChromosomow(nowy, pierwszy->liczba);
+		pierwszy = pierwszy->pNext;
+	}
+
+	//dla drugiej listy zapisujemy chromosomy pozosta³e od k2 do konca
+	for (int i = 0; i < k2; i++)
+	{
+		drugi = drugi->pNext;
+	}
+
+	while (drugi)
+	{
+		DodajDoListyChromosomow(nowy, drugi->liczba);
+		drugi = drugi->pNext;
+	}
+
+	return nowy;
+}
+
+void WylosujPareOsobnikow(Osobnik* pHead, double WspolczynnikRozmnazania, Osobnik*& pierwszy, Osobnik*& drugi)
+{
+	if (!pHead)
+	{
+		//brak populacji (np. wymarla)
+		pierwszy = nullptr;
+		drugi = nullptr;
+		return;
+	}
+
+	Osobnik* zdolne = nullptr;
+	Osobnik* temp = pHead;
+
+	while (temp)
+	{
+		if (temp->dopasowanie > WspolczynnikRozmnazania)
+		{
+			Chromosom* kopia = DuplikujChromosom(temp->chromosom);
+			DodajDoListyOsobnikow(zdolne, kopia, temp->dopasowanie);
+		}
+		temp = temp->pNext;
+	}
+
+	int n = RozmiarListyOsobnikow(zdolne);
+
+	if (n < 2)
+	{
+		//zbyt malo osobnikow zdolnych do rozmnazania sie
+		pierwszy = nullptr;
+		drugi = nullptr;
+		return;
+	}
+
+	default_random_engine rng;
+	rng.seed(chrono::system_clock::now().time_since_epoch().count());
+
+	//okresla ilosc "przejsc" po liscie do znalezienia danego osobnika (tylko dla zdolnych do rozmnazania sie) - od 0 do (n - 1)
+	uniform_int_distribution<int> rozklad(0, n - 1);
+
+	int a = rozklad(rng);
+	int b;
+
+	//upewniamy sie ze wylosowalismy 2 roznych osobnikow
+	do
+	{
+		b = rozklad(rng);
+	} while (a == b);
+
+	temp = zdolne;
+	for (int i = 0; i < a; i++)
+	{
+		temp = temp->pNext;
+	}
+	pierwszy = new Osobnik{ temp->dopasowanie, DuplikujChromosom(temp->chromosom), nullptr };
+
+	temp = zdolne;
+	for (int i = 0; i < b; i++)
+	{
+		temp = temp->pNext;
+	}
+	drugi = new Osobnik{ temp->dopasowanie, DuplikujChromosom(temp->chromosom), nullptr };
+
+	UsunListeOsobnikow(zdolne);
+}
+
+Osobnik* Rozmnoz(Osobnik* pierwszy, Osobnik* drugi, double WspolczynnikRozmnazania)
+{
+	//upewniamy sie, ze oba osobniki sa zdolne do rozmnazania
 	if (pierwszy->dopasowanie <= WspolczynnikRozmnazania || drugi->dopasowanie <= WspolczynnikRozmnazania)
 	{
 		return nullptr;
 	}
 
-	Osobnik* nowy = new Osobnik;
-	nowy->chromosom = nullptr;
-	Chromosom* pierwszyChromosom = pierwszy->chromosom;
-	Chromosom* drugiChromosom = drugi->chromosom;
+	//(-1) w funkcji dopasowania oznacza "nie ustawiono" - zostanie ustawiona po wylosowaniu calego pokolenia (zeby nowopowstale osobniki nie krzyzowaly sie z innymi od razu)
+	Osobnik* nowy = new Osobnik{ -1, nullptr, nullptr };
 
 	default_random_engine rng;
 	rng.seed(chrono::system_clock::now().time_since_epoch().count());
 
-	//wylosuj pekniecie dla pierwszego osobnika (ilosc chromosomow ktore dodajemy) - liczymy od poczatku listy do wylosowanego miejsca
-	int n = RozmiarListyChromosomow(pierwszy->chromosom);
+	//losujemy miejsce pekniecia dla pierwszego chromosomu
+	int n1 = RozmiarListyChromosomow(pierwszy->chromosom);
 
-	//zakladamy ze kazdy osobnik "daje" co najmniej jeden fragment chromosomu
-	uniform_int_distribution<int> rozklad(1, n);
-	int j = rozklad(rng);
+	uniform_int_distribution<int> rozklad1(1, n1 - 1);
 
-	//dodaj elementy do chromosomu nowego osobnika
-	for (int i = 0; i < j; i++)
-	{
-		DodajDoListyChromosomow(nowy->chromosom, pierwszyChromosom->liczba);
-		pierwszyChromosom = pierwszyChromosom->pNext;
-	}
+	int k1 = rozklad1(rng);
 
-	//wylosuj pekniecie dla drugiego osobnika - liczymy od wylosowanego miejsca do konca listy
-	n = RozmiarListyChromosomow(drugi->chromosom);
-	uniform_int_distribution<int> rozklad2(0, n);
-	j = rozklad2(rng);
+	//losujemy miejsce pekniecia dla drugiego chromosomu
+	int n2 = RozmiarListyChromosomow(drugi->chromosom);
 
-	for (int i = 0; i < j; i++)
-	{
-		drugiChromosom = drugiChromosom->pNext;
-	}
+	uniform_int_distribution<int> rozklad2(0, n2 - 2);
 
-	while (drugiChromosom)
-	{
-		DodajDoListyChromosomow(nowy->chromosom, drugiChromosom->liczba);
-		drugiChromosom = drugiChromosom->pNext;
-	}
+	int k2 = rozklad2(rng);
 
-	nowy->dopasowanie = WylosujFunkcjeDopasowania();
+	//chromosomy pekaja w wylosowanych miejscach i zostaja polaczone, a nastepnie przypisane do nowego osobnika
+	nowy->chromosom = PolaczChromosom(pierwszy->chromosom, k1, drugi->chromosom, k2);
 
 	return nowy;
 }
 
-void NastepnePokolenie(Osobnik*& pHead, int LiczbaParOsobnikow, double WspolczynnikWymierania, double WspolczynnikRozmnazania)
+void NastepnePokolenie(Osobnik*& pHead, int LiczbaParOsobnikow, double WspolczynnikRozmnazania)
 {
 	//skrzyzuj LiczbaParOsobnikow par, nastepnie usun z populacji osobniki o zbyt malej wartosci funkcji dopasowania
 
 	for (int i = 0; i < LiczbaParOsobnikow; i++)
 	{
-		//lista zawierajaca 2 wylosowanych osobnikow
-		Osobnik* para = WylosujPareOsobnikow(pHead, WspolczynnikRozmnazania);
+		//to beda nasi osobnicy
+		Osobnik* pierwszy = nullptr;
+		Osobnik* drugi = nullptr;
 
-		if (!para)
+		WylosujPareOsobnikow(pHead, WspolczynnikRozmnazania, pierwszy, drugi);
+
+		if (!pierwszy || !drugi)
 		{
-			//w populacji jest zbyt malo osobnikow zdolnych do rozmnazania
+			//w populacji jest za malo osobnikow zdolnych do rozmnazania
 			break;
 		}
 
-		Osobnik* nowy = Rozmnoz(pHead, para, para->pNext, WspolczynnikRozmnazania);
+		Osobnik* nowy = Rozmnoz(pierwszy, drugi, WspolczynnikRozmnazania);
 
-		if (nowy != nullptr)
+		if (!nowy)
 		{
-			DodajDoListyOsobnikow(pHead, nowy->chromosom, nowy->dopasowanie);
+			//jezeli nowy jest nullptr, to najprawdopodobniej cos poszlo nie tak - sprobuj wykonac petle jeszcze raz
+			continue;
 		}
 
-		/*delete para->pNext;
-		delete para;*/
-		delete nowy;
-	}
+		DodajDoListyOsobnikow(pHead, DuplikujChromosom(nowy->chromosom), nowy->dopasowanie);
 
-	UsunOsobnikowZPopulacji(pHead, WspolczynnikWymierania);
+		//usun obu osobnikow (traktujemy ich jak liste jednoelementowa) - nie sa juz nam potrzebni (oczywiscie nadal znajduja sie w liscie wszystkich osobnikow)
+		UsunListeOsobnikow(pierwszy);
+		UsunListeOsobnikow(drugi);
+
+		UsunListeOsobnikow(nowy);
+	}
 }
 
 Osobnik* WczytajOsobnikowZPliku(string& Wejscie)
 {
 	Osobnik* lista = nullptr;
 	ifstream plikWejsciowy(Wejscie);
-	string temp;
+	string linia;
 
-	//kazda linia to jeden osobnik
-	while (getline(plikWejsciowy, temp))
+	while (getline(plikWejsciowy, linia))
 	{
 		Osobnik* nowy = new Osobnik;
 		nowy->chromosom = nullptr;
 		nowy->dopasowanie = WylosujFunkcjeDopasowania();
 
-		//zamieniamy ciag liczb naturalnych oddzielonych spacjami na liste jednokierunkowa chromosomu
-		//! zakladamy ze sa oddzielone spacjami, a co jesli nie?
+		stringstream ss;
+		ss << linia;
 
-		string tempDna;
-		for (size_t i = 0; i < temp.size(); i++)
+		int dna;
+
+		while (ss >> dna)
 		{
-			if (temp[i] == ' ')
-			{
-				int dna = stoi(tempDna);
-				tempDna = "";
-				DodajDoListyChromosomow(nowy->chromosom, dna);
-			}
-			else
-			{
-				tempDna += temp[i];
-			}
+			DodajDoListyChromosomow(nowy->chromosom, dna);
 		}
-		int dna = stoi(tempDna);
-		DodajDoListyChromosomow(nowy->chromosom, dna);
 
-		//dodaj nowego osobnika, wczytanego powyzej, do listy
 		DodajDoListyOsobnikow(lista, nowy->chromosom, nowy->dopasowanie);
-
 		delete nowy;
 	}
 
 	plikWejsciowy.close();
+
 	return lista;
 }
 
